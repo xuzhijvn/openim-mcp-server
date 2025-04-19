@@ -1,0 +1,30 @@
+{
+  "name": "@openimsdk/openim-mcp-server",
+  "version": "0.0.1",
+  "description": "MCP server for interacting with OpenIM",
+  "license": "MIT",
+  "author": "OpenIM",
+  "homepage": "https://openim.io",
+  "bugs": "https://github.com/openimsdk/openim-mcp-server/issues",
+  "type": "module",
+  "bin": {
+    "openim-mcp-server": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc && shx chmod +x dist/*.js",
+    "prepare": "npm run build",
+    "watch": "tsc --watch",
+    "test": "tsc && node dist/test/test.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "shx": "^0.3.4",
+    "typescript": "^5.6.2"
+  }
+}
