@@ -7,7 +7,30 @@ import {
   ListToolsRequestSchema,
   Tool,
 } from "@modelcontextprotocol/sdk/types.js";
-import { z } from "zod";
+
+interface ParseTokenArgs {
+    token: string;
+}
+
+interface ParseTokenResponse {
+    errCode: number;
+    errMsg: string;
+    errDlt: string;
+    data: {
+        userID: string;
+        platformID: number;
+        expireTimeSeconds: number;
+    };
+}
+
+interface GetUsersArgs {
+  userID?: string;
+  nickName?: string;
+  pagination: {
+    pageNumber: number;
+    showNumber: number;
+  };
+}
 
 interface GetGroupsArgs {
   groupID?: string;
@@ -68,7 +91,7 @@ interface SendMessageArgs {
 }
 
 interface BatchSendMessageArgs {
-  recvIDs: string[];
+  recvIDs?: string[];
   sendID: string;
   senderNickname?: string;
   senderFaceURL?: string;
@@ -102,6 +125,54 @@ interface SendBusinessNotificationArgs {
 }
 
 // OpenIM tool definitions
+const parseTokenTool: Tool = {
+  name: "openim_parse_token",
+  description: "Parse token to get user ID, platform ID and expiration time",
+  inputSchema: {
+    type: "object",
+    properties: {
+      token: {
+        type: "string",
+        description: "Token to parse",
+      },
+    },
+    required: ["token"],
+  },
+};
+
+const getUsersTool: Tool = {
+  name: "openim_get_users",
+  description: "Get the list of users with pagination",
+  inputSchema: {
+    type: "object",
+    properties: {
+      userID: {
+        type: "string",
+        description: "Optional user ID to filter",
+      },
+      nickName: {
+        type: "string",
+        description: "Optional nickname to filter",
+      },
+      pagination: {
+        type: "object",
+        properties: {
+          pageNumber: {
+            type: "number",
+            description: "Current page number, starts from 1",
+          },
+          showNumber: {
+            type: "number",
+            description: "Number of entries per page",
+          },
+        },
+        required: ["pageNumber", "showNumber"],
+      },
+    },
+    required: ["pagination"],
+  },
+};
+
 const getGroupsTool: Tool = {
   name: "openim_get_groups",
   description: "Get the list of groups with optional filters",
@@ -467,6 +538,31 @@ class OpenIMClient {
     this.token = token;
   }
 
+  async parseToken(args: ParseTokenArgs): Promise<ParseTokenResponse> {
+    const response = await fetch(`${this.apiAddr}/auth/parse_token`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "operationID": Date.now().toString(),
+      },
+      body: JSON.stringify(args),
+    });
+    return response.json();
+  }
+
+  async getUsers(args: GetUsersArgs): Promise<any> {
+        const response = await fetch(`${this.apiAddr}/user/get_users`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "operationID": Date.now().toString(),
+                "token": this.token,
+            },
+            body: JSON.stringify(args),
+        });
+        return response.json();
+    }
+
   async getGroups(args: GetGroupsArgs): Promise<any> {
     const response = await fetch(`${this.apiAddr}/group/get_groups`, {
       method: "POST",
@@ -599,6 +695,20 @@ async function main() {
         }
 
         switch (request.params.name) {
+          case "openim_parse_token": {
+            const args = request.params.arguments as unknown as ParseTokenArgs;
+            const response = await openIMClient.parseToken(args);
+            return {
+              content: [{ type: "text", text: JSON.stringify(response) }],
+            };
+          }
+          case "openim_get_users": {
+            const args = request.params.arguments as unknown as GetUsersArgs;
+            const response = await openIMClient.getUsers(args);
+            return {
+              content: [{ type: "text", text: JSON.stringify(response) }],
+            };
+          }
           case "openim_get_groups": {
             const args = request.params.arguments as unknown as GetGroupsArgs;
             const response = await openIMClient.getGroups(args);
@@ -675,9 +785,10 @@ async function main() {
   );
 
   server.setRequestHandler(ListToolsRequestSchema, async () => {
-    console.error("Received ListToolsRequest");
     return {
       tools: [
+        parseTokenTool,
+        getUsersTool,
         getGroupsTool,
         getGroupMemberListTool,
         getFriendListTool,

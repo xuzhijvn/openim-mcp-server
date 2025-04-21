@@ -52,6 +52,43 @@ async function main() {
     const tools = await client.listTools();
     console.log('Available tools:', JSON.stringify(tools, null, 2));
 
+    // Test parse token
+    console.log('\nTesting openim_parse_token:');
+    const parseTokenResponse = await client.callTool({
+      name: 'openim_parse_token',
+      arguments: {
+        token: process.env.OPENIM_TOKEN || ''
+      }
+    });
+    console.log('Parse token response:', JSON.stringify(parseTokenResponse, null, 2));
+
+    // Test get users
+    console.log('\nTesting openim_get_users:');
+    const usersResponse = await client.callTool({
+      name: 'openim_get_users',
+      arguments: {
+        pagination: {
+          pageNumber: 1,
+          showNumber: 10
+        }
+      }
+    });
+    console.log('Get users response:', JSON.stringify(usersResponse, null, 2));
+
+    // Test get users with filter
+    console.log('\nTesting openim_get_users with filter:');
+    const usersFilterResponse = await client.callTool({
+      name: 'openim_get_users',
+      arguments: {
+        userID: "2cdf7942da0db2cbc71fcc228bbfd6ec85", // 使用从parse_token获取的用户ID
+        pagination: {
+          pageNumber: 1,
+          showNumber: 10
+        }
+      }
+    });
+    console.log('Get filtered users response:', JSON.stringify(usersFilterResponse, null, 2));
+
     // Test get groups
     console.log('\nTesting openim_get_groups:');
     const groupsResponse = await client.callTool({
@@ -132,7 +169,7 @@ async function main() {
       name: 'openim_batch_send_message',
       arguments: {
         sendID: "2cdf7942da0db2cbc71fcc228bbfd6ec85",
-        recvIDs: ["5af4c1e82e864298b93ba0e17fa07a7d19"],
+        recvIDs: ["5af4c1e82e864298b93ba0e17fa07a7d19", "15ec50f9c81b561f2ae2772b22a99ad811"],
         content: {
           content: "Test batch message"
         },

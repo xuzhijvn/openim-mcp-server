@@ -4,7 +4,26 @@ MCP Server for the OpenIM API, enabling Claude to interact with OpenIM services.
 
 ## Tools
 
-1. `openim_send_message`
+1. `openim_parse_token`
+   - Parse token to get user ID, platform ID and expiration time
+   - Required parameters:
+     - `token` (string): Token to parse
+   - Response data:
+     - `userID` (string): User identifier
+     - `platformID` (number): Platform identifier
+     - `expireTimeSeconds` (number): Token expiration time in seconds
+
+2. `openim_get_users`
+   - Get the list of users with pagination
+   - Required parameters:
+     - `pagination` (object): Pagination parameters
+       - `pageNumber` (number): Page number, starts from 1
+       - `showNumber` (number): Number of items per page
+   - Optional parameters:
+     - `userID` (string): Filter by user ID
+     - `nickName` (string): Filter by nickname
+
+3. `openim_send_message`
    - Send message to specific user or group
    - Required parameters:
      - `sendID` (string): Sender ID
@@ -18,7 +37,7 @@ MCP Server for the OpenIM API, enabling Claude to interact with OpenIM services.
      - `senderFaceURL` (string): Sender avatar URL
      - `offlinePushInfo` (object): Offline push information
 
-2. `openim_batch_send_message`
+4. `openim_batch_send_message`
    - Batch send messages to multiple users
    - Required parameters:
      - `sendID` (string): Sender ID
@@ -31,7 +50,7 @@ MCP Server for the OpenIM API, enabling Claude to interact with OpenIM services.
      - `senderFaceURL` (string): Sender avatar URL
      - `offlinePushInfo` (object): Offline push information
 
-3. `openim_send_business_notification`
+5. `openim_send_business_notification`
    - Send business notification message
    - Required parameters:
      - `sendID` (string): Sender ID
@@ -39,7 +58,7 @@ MCP Server for the OpenIM API, enabling Claude to interact with OpenIM services.
      - `content` (string): Notification content
      - `title` (string): Notification title
 
-4. `openim_get_friend_list`
+6. `openim_get_friend_list`
    - Get friend list of a user
    - Required parameters:
      - `userID` (string): User ID
@@ -47,7 +66,7 @@ MCP Server for the OpenIM API, enabling Claude to interact with OpenIM services.
        - `pageNumber` (number): Page number, starts from 1
        - `showNumber` (number): Number of items per page
 
-5. `openim_get_groups`
+7. `openim_get_groups`
    - Get group list
    - Required parameters:
      - `pagination` (object): Pagination parameters
@@ -57,7 +76,7 @@ MCP Server for the OpenIM API, enabling Claude to interact with OpenIM services.
      - `groupID` (string): Filter by group ID
      - `groupName` (string): Filter by group name
 
-6. `openim_get_group_member_list`
+8. `openim_get_group_member_list`
    - Get group member list
    - Required parameters:
      - `groupID` (string): Group ID
@@ -65,7 +84,7 @@ MCP Server for the OpenIM API, enabling Claude to interact with OpenIM services.
    - Optional parameters:
      - `keyword` (string): Search keyword
 
-7. `openim_search_message`
+9. `openim_search_message`
    - Search messages
    - Required parameters:
      - `pagination` (object): Pagination parameters
