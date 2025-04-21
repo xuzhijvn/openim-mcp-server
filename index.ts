@@ -71,11 +71,8 @@ interface SearchMessageArgs {
 }
 
 interface SendMessageArgs {
-  sendID: string;
   recvID?: string;
   groupID?: string;
-  senderNickname?: string;
-  senderFaceURL?: string;
   content: {
     content: string;
   };
@@ -92,10 +89,6 @@ interface SendMessageArgs {
 
 interface BatchSendMessageArgs {
   recvIDs?: string[];
-  sendID: string;
-  senderNickname?: string;
-  senderFaceURL?: string;
-  senderPlatformID?: number;
   content: {
     content: string;
   };
@@ -115,7 +108,6 @@ interface BatchSendMessageArgs {
 }
 
 interface SendBusinessNotificationArgs {
-  sendUserID: string;
   recvUserID?: string;
   recvGroupID?: string;
   key: string;
@@ -125,21 +117,6 @@ interface SendBusinessNotificationArgs {
 }
 
 // OpenIM tool definitions
-const parseTokenTool: Tool = {
-  name: "openim_parse_token",
-  description: "Parse token to get user ID, platform ID and expiration time",
-  inputSchema: {
-    type: "object",
-    properties: {
-      token: {
-        type: "string",
-        description: "Token to parse",
-      },
-    },
-    required: ["token"],
-  },
-};
-
 const getUsersTool: Tool = {
   name: "openim_get_users",
   description: "Get the list of users with pagination",
@@ -285,7 +262,7 @@ const searchMessageTool: Tool = {
       },
       contentType: {
         type: "number",
-        description: "Message content type"
+        description: "Message content type: 101=Text (only text messages are supported)",
       },
       sendTime: {
         type: "object",
@@ -302,7 +279,7 @@ const searchMessageTool: Tool = {
       },
       sessionType: {
         type: "number",
-        description: "Session type"
+        description: "Session type: 1=Single chat, 3=Group chat",
       },
       pagination: {
         type: "object",
@@ -325,14 +302,10 @@ const searchMessageTool: Tool = {
 
 const sendMessageTool: Tool = {
   name: "openim_send_message",
-  description: "Send message to specific user or group",
+  description: "Send message to specific user or group. The sender ID will be automatically generated.",
   inputSchema: {
     type: "object",
     properties: {
-      sendID: {
-        type: "string",
-        description: "Sender ID",
-      },
       recvID: {
         type: "string",
         description: "Receiver ID, empty for group chat",
@@ -340,14 +313,6 @@ const sendMessageTool: Tool = {
       groupID: {
         type: "string",
         description: "Group ID, empty for one-to-one chat",
-      },
-      senderNickname: {
-        type: "string",
-        description: "Sender nickname",
-      },
-      senderFaceURL: {
-        type: "string",
-        description: "Sender avatar URL",
       },
       content: {
         type: "object",
@@ -361,11 +326,11 @@ const sendMessageTool: Tool = {
       },
       contentType: {
         type: "number",
-        description: "Message type",
+        description: "Message type: 101=Text (only text messages are supported)",
       },
       sessionType: {
         type: "number",
-        description: "Session type",
+        description: "Session type: 1=Single chat, 3=Group chat",
       },
       offlinePushInfo: {
         type: "object",
@@ -393,13 +358,13 @@ const sendMessageTool: Tool = {
         },
       },
     },
-    required: ["sendID", "content", "contentType", "sessionType"],
+    required: ["content", "contentType", "sessionType"],
   },
 };
 
 const batchSendMessageTool: Tool = {
   name: "openim_batch_send_message",
-  description: "Batch send messages to multiple users",
+  description: "Batch send messages to multiple users. The sender ID will be automatically generated.",
   inputSchema: {
     type: "object",
     properties: {
@@ -409,22 +374,6 @@ const batchSendMessageTool: Tool = {
           type: "string"
         },
         description: "Receiver ID list",
-      },
-      sendID: {
-        type: "string",
-        description: "Sender ID",
-      },
-      senderNickname: {
-        type: "string",
-        description: "Sender nickname",
-      },
-      senderFaceURL: {
-        type: "string",
-        description: "Sender avatar URL",
-      },
-      senderPlatformID: {
-        type: "number",
-        description: "Sender platform ID",
       },
       content: {
         type: "object",
@@ -438,11 +387,11 @@ const batchSendMessageTool: Tool = {
       },
       contentType: {
         type: "number",
-        description: "Message type",
+        description: "Message type: 101=Text (only text messages are supported)",
       },
       sessionType: {
         type: "number",
-        description: "Session type",
+        description: "Session type: 1=Single chat, 3=Group chat",
       },
       isOnlineOnly: {
         type: "boolean",
@@ -486,20 +435,16 @@ const batchSendMessageTool: Tool = {
         description: "Send to all users",
       },
     },
-    required: ["sendID", "content", "contentType", "sessionType"],
+    required: ["content", "contentType", "sessionType"],
   },
 };
 
 const sendBusinessNotificationTool: Tool = {
   name: "openim_send_business_notification",
-  description: "Send business notification message",
+  description: "Send business notification message. The sender user ID will be automatically generated.",
   inputSchema: {
     type: "object",
     properties: {
-      sendUserID: {
-        type: "string",
-        description: "System notification ID or user ID",
-      },
       recvUserID: {
         type: "string",
         description: "Receiver user ID, can only choose one from recvGroupID",
@@ -525,7 +470,7 @@ const sendBusinessNotificationTool: Tool = {
         description: "Reliability level of notification messages (1: Online push, 2: Must-reach notification), default: 1",
       },
     },
-    required: ["sendUserID", "key", "data"],
+    required: ["key", "data"],
   },
 };
 
@@ -548,6 +493,21 @@ class OpenIMClient {
       body: JSON.stringify(args),
     });
     return response.json();
+  }
+
+  // Common method to get sender user ID from token
+  private async getSenderUserID(): Promise<string> {
+    try {
+      const tokenResponse = await this.parseToken({ token: this.token });
+      if (tokenResponse && tokenResponse.data && tokenResponse.data.userID) {
+        return tokenResponse.data.userID;
+      } else {
+        throw new Error("Failed to get userID from token");
+      }
+    } catch (error) {
+      console.error("Error generating userID:", error);
+      throw error;
+    }
   }
 
   async getUsers(args: GetUsersArgs): Promise<any> {
@@ -620,6 +580,10 @@ class OpenIMClient {
   }
 
   async sendMessage(args: SendMessageArgs): Promise<any> {
+    // Always generate sendID through token parsing
+    let messageArgs: any = { ...args };
+    messageArgs.sendID = await this.getSenderUserID();
+
     const response = await fetch(`${this.apiAddr}/msg/send_msg`, {
       method: "POST",
       headers: {
@@ -627,13 +591,17 @@ class OpenIMClient {
         "token": this.token,
         "operationID": Date.now().toString(),
       },
-      body: JSON.stringify(args),
+      body: JSON.stringify(messageArgs),
     });
 
     return response.json();
   }
 
   async batchSendMessage(args: BatchSendMessageArgs): Promise<any> {
+    // Always generate sendID through token parsing
+    let messageArgs: any = { ...args };
+    messageArgs.sendID = await this.getSenderUserID();
+
     const response = await fetch(`${this.apiAddr}/msg/batch_send_msg`, {
       method: "POST",
       headers: {
@@ -641,13 +609,17 @@ class OpenIMClient {
         "token": this.token,
         "operationID": Date.now().toString(),
       },
-      body: JSON.stringify(args),
+      body: JSON.stringify(messageArgs),
     });
 
     return response.json();
   }
 
   async sendBusinessNotification(args: SendBusinessNotificationArgs): Promise<any> {
+    // Always generate sendUserID through token parsing
+    let notificationArgs: any = { ...args };
+    notificationArgs.sendUserID = await this.getSenderUserID();
+
     const response = await fetch(`${this.apiAddr}/msg/send_business_notification`, {
       method: "POST",
       headers: {
@@ -655,7 +627,7 @@ class OpenIMClient {
         "token": this.token,
         "operationID": Date.now().toString(),
       },
-      body: JSON.stringify(args),
+      body: JSON.stringify(notificationArgs),
     });
 
     return response.json();
@@ -695,13 +667,6 @@ async function main() {
         }
 
         switch (request.params.name) {
-          case "openim_parse_token": {
-            const args = request.params.arguments as unknown as ParseTokenArgs;
-            const response = await openIMClient.parseToken(args);
-            return {
-              content: [{ type: "text", text: JSON.stringify(response) }],
-            };
-          }
           case "openim_get_users": {
             const args = request.params.arguments as unknown as GetUsersArgs;
             const response = await openIMClient.getUsers(args);
@@ -787,7 +752,6 @@ async function main() {
   server.setRequestHandler(ListToolsRequestSchema, async () => {
     return {
       tools: [
-        parseTokenTool,
         getUsersTool,
         getGroupsTool,
         getGroupMemberListTool,

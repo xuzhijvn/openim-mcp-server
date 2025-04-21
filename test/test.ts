@@ -52,16 +52,6 @@ async function main() {
     const tools = await client.listTools();
     console.log('Available tools:', JSON.stringify(tools, null, 2));
 
-    // Test parse token
-    console.log('\nTesting openim_parse_token:');
-    const parseTokenResponse = await client.callTool({
-      name: 'openim_parse_token',
-      arguments: {
-        token: process.env.OPENIM_TOKEN || ''
-      }
-    });
-    console.log('Parse token response:', JSON.stringify(parseTokenResponse, null, 2));
-
     // Test get users
     console.log('\nTesting openim_get_users:');
     const usersResponse = await client.callTool({
@@ -189,7 +179,7 @@ async function main() {
         key: "test_notification",
         data: "Test notification data",
         sendMsg: true,
-        reliabilityLevel: 2
+        reliabilityLevel: 1
       }
     });
     console.log('Business notification response:', JSON.stringify(notificationResponse, null, 2));

@@ -4,16 +4,7 @@ MCP Server for the OpenIM API, enabling Claude to interact with OpenIM services.
 
 ## Tools
 
-1. `openim_parse_token`
-   - Parse token to get user ID, platform ID and expiration time
-   - Required parameters:
-     - `token` (string): Token to parse
-   - Response data:
-     - `userID` (string): User identifier
-     - `platformID` (number): Platform identifier
-     - `expireTimeSeconds` (number): Token expiration time in seconds
-
-2. `openim_get_users`
+1. `openim_get_users`
    - Get the list of users with pagination
    - Required parameters:
      - `pagination` (object): Pagination parameters
@@ -23,42 +14,55 @@ MCP Server for the OpenIM API, enabling Claude to interact with OpenIM services.
      - `userID` (string): Filter by user ID
      - `nickName` (string): Filter by nickname
 
-3. `openim_send_message`
+2. `openim_send_message`
    - Send message to specific user or group
    - Required parameters:
-     - `sendID` (string): Sender ID
      - `content` (object): Message content
+       - `content` (string): Message text content
      - `contentType` (number): Message type
      - `sessionType` (number): Session type
    - Optional parameters:
      - `recvID` (string): Receiver ID (for single chat)
      - `groupID` (string): Group ID (for group chat)
-     - `senderNickname` (string): Sender nickname
-     - `senderFaceURL` (string): Sender avatar URL
      - `offlinePushInfo` (object): Offline push information
+       - `title` (string): Push notification title
+       - `desc` (string): Push notification description
+       - `ex` (string): Extended field
+       - `iOSPushSound` (string): iOS push sound
+       - `iOSBadgeCount` (boolean): iOS badge count
 
-4. `openim_batch_send_message`
+3. `openim_batch_send_message`
    - Batch send messages to multiple users
    - Required parameters:
-     - `sendID` (string): Sender ID
      - `content` (object): Message content
+       - `content` (string): Message text content
      - `contentType` (number): Message type
      - `sessionType` (number): Session type
    - Optional parameters:
      - `recvIDs` (string[]): List of receiver IDs
-     - `senderNickname` (string): Sender nickname
-     - `senderFaceURL` (string): Sender avatar URL
+     - `isOnlineOnly` (boolean): Online only
+     - `notOfflinePush` (boolean): Disable offline push
      - `offlinePushInfo` (object): Offline push information
+       - `title` (string): Push notification title
+       - `desc` (string): Push notification description
+       - `ex` (string): Extended field
+       - `iOSPushSound` (string): iOS push sound
+       - `iOSBadgeCount` (boolean): iOS badge count
+     - `ex` (string): Extended field
+     - `isSendAll` (boolean): Send to all users
 
-5. `openim_send_business_notification`
+4. `openim_send_business_notification`
    - Send business notification message
    - Required parameters:
-     - `sendID` (string): Sender ID
-     - `recvIDs` (string[]): List of receiver IDs
-     - `content` (string): Notification content
-     - `title` (string): Notification title
+     - `key` (string): Business classification key
+     - `data` (string): Business data
+   - Optional parameters:
+     - `recvUserID` (string): Receiver user ID, can only choose one from recvGroupID
+     - `recvGroupID` (string): Receive group ID, can only choose one from recvUserID
+     - `sendMsg` (boolean): Whether to send as a message, default: false
+     - `reliabilityLevel` (number): Reliability level of notification messages (1: Online push, 2: Must-reach notification), default: 1
 
-6. `openim_get_friend_list`
+5. `openim_get_friend_list`
    - Get friend list of a user
    - Required parameters:
      - `userID` (string): User ID
@@ -66,7 +70,7 @@ MCP Server for the OpenIM API, enabling Claude to interact with OpenIM services.
        - `pageNumber` (number): Page number, starts from 1
        - `showNumber` (number): Number of items per page
 
-7. `openim_get_groups`
+6. `openim_get_groups`
    - Get group list
    - Required parameters:
      - `pagination` (object): Pagination parameters
@@ -76,23 +80,39 @@ MCP Server for the OpenIM API, enabling Claude to interact with OpenIM services.
      - `groupID` (string): Filter by group ID
      - `groupName` (string): Filter by group name
 
-8. `openim_get_group_member_list`
+7. `openim_get_group_member_list`
    - Get group member list
    - Required parameters:
      - `groupID` (string): Group ID
      - `pagination` (object): Pagination parameters
+       - `pageNumber` (number): Current page number
+       - `showNumber` (number): Number of items per page
    - Optional parameters:
      - `keyword` (string): Search keyword
 
-9. `openim_search_message`
+8. `openim_search_message`
    - Search messages
    - Required parameters:
      - `pagination` (object): Pagination parameters
+       - `pageNumber` (number): Current page number
+       - `showNumber` (number): Number of items per page
    - Optional parameters:
      - `sendID` (string): Sender ID
      - `recvID` (string): Receiver ID
-     - `contentType` (number): Message type
-     - `sessionType` (number): Session type
+     - `contentType` (number): Message content type: 101=Text (only text messages are supported)
+     - `sendTime` (object): Message send time range
+       - `start` (number): Start timestamp
+       - `end` (number): End timestamp
+     - `sessionType` (number): Session type: 1=Single chat, 3=Group chat
+
+## Message Types Explanation
+
+### Session Types
+- `sessionType: 1`: Single chat (one-to-one conversation)
+- `sessionType: 3`: Group chat (conversation in a group)
+
+### Content Types
+- `contentType: 101`: Text message (only text messages are supported)
 
 ## Setup
 
